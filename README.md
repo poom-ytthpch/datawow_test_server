@@ -28,6 +28,9 @@
 
 ## Project setup
 
+1. Create .env example in example.env
+2. Create config.yaml example in example.config.yaml
+
 ```bash
 $ pnpm install
 ```
