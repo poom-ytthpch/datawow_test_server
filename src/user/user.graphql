@@ -1,0 +1,21 @@
+scalar Date
+
+type User {
+  id: Int
+  username: String
+  image: String
+  createdAt: Date
+  updatedAt: Date
+}
+
+input SignInInput {
+  username: String
+}
+
+type Query {
+  user(id: ID): User!
+}
+
+type Mutation {
+  signIn(input: SignInInput!): User!
+}

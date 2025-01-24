@@ -1,0 +1,66 @@
+enum Community {
+  History
+  Food
+  Pets
+  Health
+  Fashion
+  Exercise
+  Others
+}
+
+type Post {
+  id: Int
+  title: String
+  content: String
+  community: Community
+  author: User
+  authorId: Int
+  comments: [Comment]
+  createdAt: Date
+  updatedAt: Date
+  comment_count: Int
+}
+
+type Comment {
+  id: Int
+  content: String
+  post: Post
+  postId: Int
+  author: User
+  authorId: Int
+  createdAt: Date
+  updatedAt: Date
+}
+
+input CreatePostInput {
+  authorId: Int
+  title: String
+  content: String
+  community: Community
+}
+
+input CreateCommentInput {
+  content: String
+  postId: Int
+  authorId: Int
+}
+
+input UpdatePostInput {
+  postId: Int
+  title: String
+  community: Community
+  content: String
+}
+
+type Query {
+  posts: [Post]!
+  post(id: Int): Post!
+  authorPosts(id: Int!): [Post]!
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post!
+  createComment(input: CreateCommentInput!): Post!
+  updatePost(input: UpdatePostInput!): Post!
+  deletePost(id: Int!): Post!
+}
