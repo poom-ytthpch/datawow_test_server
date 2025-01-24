@@ -34,7 +34,7 @@
 ```bash
 $ pnpm install
 
-if database not migrate run
+# if database not migrate run migrate script
 $ pnpm migrate:dev
 ```
 
