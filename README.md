@@ -33,6 +33,9 @@
 
 ```bash
 $ pnpm install
+
+if database not migrate run
+$ pnpm migrate:dev
 ```
 
 ## Compile and run the project
