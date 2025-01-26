@@ -18,7 +18,12 @@ type Post {
   comments: [Comment]
   createdAt: Date
   updatedAt: Date
+  _count: CommentCount
   comment_count: Int
+}
+
+type CommentCount {
+  comments: Int
 }
 
 type Comment {
@@ -56,11 +61,12 @@ type Query {
   posts: [Post]!
   post(id: Int): Post!
   authorPosts(id: Int!): [Post]!
+  commentsByPostId(id: Int!): [Comment]!
 }
 
 type Mutation {
   createPost(input: CreatePostInput!): Post!
-  createComment(input: CreateCommentInput!): Post!
+  createComment(input: CreateCommentInput!): Comment!
   updatePost(input: UpdatePostInput!): Post!
   deletePost(id: Int!): Post!
 }

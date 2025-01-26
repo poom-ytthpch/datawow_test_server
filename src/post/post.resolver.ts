@@ -40,4 +40,10 @@ export class PostResolver {
   async updatePost(@Args('input') input: UpdatePostInput) {
     return this.postService.updatePost(input);
   }
+
+  @Query()
+  async commentsByPostId(@Args('id') id: number) {
+    return this.postService.commentsByPostId(id);
+  }
+
 }

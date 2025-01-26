@@ -52,7 +52,12 @@ export class Post {
     comments?: Nullable<Nullable<Comment>[]>;
     createdAt?: Nullable<Date>;
     updatedAt?: Nullable<Date>;
+    _count?: Nullable<CommentCount>;
     comment_count?: Nullable<number>;
+}
+
+export class CommentCount {
+    comments?: Nullable<number>;
 }
 
 export class Comment {
@@ -73,13 +78,15 @@ export abstract class IQuery {
 
     abstract authorPosts(id: number): Nullable<Post>[] | Promise<Nullable<Post>[]>;
 
+    abstract commentsByPostId(id: number): Nullable<Comment>[] | Promise<Nullable<Comment>[]>;
+
     abstract user(id?: Nullable<string>): User | Promise<User>;
 }
 
 export abstract class IMutation {
     abstract createPost(input: CreatePostInput): Post | Promise<Post>;
 
-    abstract createComment(input: CreateCommentInput): Post | Promise<Post>;
+    abstract createComment(input: CreateCommentInput): Comment | Promise<Comment>;
 
     abstract updatePost(input: UpdatePostInput): Post | Promise<Post>;
 

@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Comment } from '@prisma/client';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import { Comment, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import {
   CreateCommentInput,
@@ -7,10 +8,14 @@ import {
   Post,
   UpdatePostInput,
 } from 'src/types';
+import CacheManger from 'cache-manager';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly repos: PrismaService) {}
+  constructor(
+    private readonly repos: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: CacheManger.Cache,
+  ) {}
 
   async createPost(input: CreatePostInput): Promise<Post> {
     const { title, content, community, authorId } = input;
@@ -32,25 +37,33 @@ export class PostService {
   }
 
   async posts(): Promise<Post[]> {
-    const posts = await this.repos.post.findMany({
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        community: true,
-        author: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: {
-            comments: true,
+    const cacheKey = `posts`;
+
+    let posts = await this.cacheManager.get<Post[]>(cacheKey);
+
+    if (!posts) {
+      posts = (await this.repos.post.findMany({
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          community: true,
+          author: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: {
+            select: {
+              comments: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })) as Post[];
+
+      await this.cacheManager.set(cacheKey, posts, 300);
+    }
 
     return posts.map((post) => ({
       ...post,
@@ -59,6 +72,8 @@ export class PostService {
   }
 
   async post(id: number): Promise<Post> {
+    const cacheKey = `posts`;
+
     const post = await this.repos.post.findUnique({
       where: {
         id,
@@ -78,10 +93,12 @@ export class PostService {
       },
     });
 
+    await this.cacheManager.del(cacheKey);
+
     return { ...post, comment_count: post._count.comments } as Post;
   }
 
-  async createComment(input: CreateCommentInput): Promise<Post> {
+  async createComment(input: CreateCommentInput): Promise<Comment> {
     const { content, authorId, postId } = input;
 
     const comment = await this.repos.comment.create({
@@ -100,9 +117,10 @@ export class PostService {
       },
     });
 
-    const post = await this.post(comment.postId);
+    const cacheKey = `comments:${postId}`;
+    await this.cacheManager.del(cacheKey);
 
-    return post as Post;
+    return comment as Comment;
   }
 
   async authorPosts(id: number): Promise<Post[]> {
@@ -160,5 +178,22 @@ export class PostService {
     });
 
     return deletePst as Post;
+  }
+
+  async commentsByPostId(postId: number): Promise<Comment[]> {
+    const cacheKey = `comments:${postId}`;
+
+    let comments = await this.cacheManager.get<Comment[]>(cacheKey);
+
+    if (!comments) {
+      comments = await this.repos.comment.findMany({
+        where: { postId },
+        include: { author: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      await this.cacheManager.set(cacheKey, comments, 300);
+    }
+    return comments;
   }
 }
